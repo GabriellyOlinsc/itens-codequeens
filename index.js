@@ -2,10 +2,12 @@ const express = require('express');
 const path = require('path');
 const app = express();
 
-
 const PORT = 3000;
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+//PARA RECONHECER O STYLE.CSS
+app.use(express.static(path.join(__dirname, "public")));
 
 const publicDir = path.join(__dirname, './public');
 
@@ -91,10 +93,10 @@ app.post('/login', (req, res) => {
         })
     }
     // res.status(200).json({ status: 200, message: "Login com sucesso" })
-    res.redirect('/itens.html')
+    res.redirect('/itens')
 })
 
-app.get('/itens.html', (req, res) => {
+app.get('/itens', (req, res) => {
     res.sendFile(path.join(publicDir, 'itens.html'));
 });
 
@@ -102,16 +104,15 @@ app.get('/pessoas', (req, res) => {
     res.status(200).json(pessoas);
 })
 
-//POST: Criar uma pessoa no array pessoas
 app.post('/pessoas', (req, res) => {
-    const {nome, login, senha } = req.body
+    const { nome, login, senha } = req.body
 
-    if(!nome || !senha || !login){
+    if (!nome || !senha || !login) {
         res.status(400).json('Faltou informação')
     }
 
     const pessoaExiste = pessoas.find((p) => p.login === login)
-    if(pessoaExiste){
+    if (pessoaExiste) {
         res.status(404).json("Pessoa existe")
     }
 
@@ -124,6 +125,18 @@ app.post('/pessoas', (req, res) => {
     pessoas.push(novaPessoa)
     res.status(201).json("Pessoa criada com sucesso!")
 })
+
+app.delete('/pessoas/:id', (req, res) => {
+    const id = parseInt(req.params.id);
+
+    const index = pessoas.findIndex((p) => p.id === id);
+    if (index === -1) {
+        return res.status(404).json({ message: "Pessoa não encontrada" });
+    }
+
+    pessoas.splice(index, 1);
+    res.status(200).json({ message: "Pessoa excluída com sucesso!" });
+});
 
 app.listen(PORT, () => {
     console.log(`Servidor rodando em http://localhost:${PORT}`);
